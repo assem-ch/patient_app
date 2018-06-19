@@ -1,11 +1,49 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
+// get package.json version
+import groovy.json.JsonSlurper
+
+def getNpmVersion() {
+    def inputFile = new File("../package.json")
+    def packageJson = new JsonSlurper().parseText(inputFile.text)
+    return packageJson["version"]
+}
+
+def getNpmVersionArray() { // major [0], minor [1], patch [2]
+    def (major, minor, patch) = getNpmVersion().tokenize('.')
+    return [Integer.parseInt(major), Integer.parseInt(minor), Integer.parseInt(patch)] as int[]
+}
+
+subprojects {
+    ext {
+        def npmVersion = getNpmVersionArray()
+        versionMajor = npmVersion[0]
+        versionMinor = npmVersion[1]
+        versionPatch = npmVersion[2]
+    }
+}
+
+ext {
+    compileSdkVersion = 25
+    buildToolsVersion = "25.0.2"
+}
+subprojects { subproject ->
+    afterEvaluate{
+        if((subproject.plugins.hasPlugin('android') || subproject.plugins.hasPlugin('android-library'))) {
+            android {
+                compileSdkVersion rootProject.ext.compileSdkVersion
+                buildToolsVersion rootProject.ext.buildToolsVersion
+            }
+        }
+    }
+}
+
 buildscript {
     repositories {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.2.3'
+        classpath 'com.android.tools.build:gradle:2.3.3'
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
